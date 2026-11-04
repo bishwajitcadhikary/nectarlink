@@ -5,24 +5,28 @@ apps update themselves afterwards.
 
 ## What a release is
 
-A GitHub release with four files:
+A GitHub release with five files:
 
 | File | Built by |
 |---|---|
 | `Nectarlink-<version>-x64-setup.exe` | The `windows` job: `scripts/package.ps1`, then `scripts/smoke-installer.ps1` installs and uninstalls it |
 | `Nectarlink-<version>-arm64-setup.exe` | The `windows-arm64` job: cross-compiled and packaged via `scripts/package.ps1 -Arch arm64` |
+| `Nectarlink-<version>-macos-universal.dmg` | The `macos` job: `desktop/packaging/macos/build-dmg.sh --check`, which bundles Qt and runs the app from the mounted disk image |
 | `Nectarlink-<version>-android.apk` | The `android` job: a release build for 64-bit and 32-bit ARM, signed with the release key and checked with `apksigner verify` |
-| `SHA256SUMS.txt` | The `publish` job, over all installers and APKs |
+| `SHA256SUMS.txt` | The `publish` job, over all installers, the disk image and APKs |
 
 Each app's updater needs its own file and `SHA256SUMS.txt`: it only
 accepts an installer that `SHA256SUMS.txt` lists with a matching hash.
-Each Windows updater picks the installer for its own architecture.
+Each Windows updater picks the installer for its own architecture. The
+macOS Preview has no self-updater yet; its disk image is for people to
+download, and `SHA256SUMS.txt` lets them check it.
 
 ## Steps
 
 1. **Version.** `Cargo.toml` (`[workspace.package] version`) is the only
-   place it's set: the Windows app, the installer and the Android app
-   (`versionName`, and `versionCode` derived from it) all read it. Use
+   place it's set: the desktop app, the installers, the macOS disk image and
+   the Android app (`versionName`, and `versionCode` derived from it) all read
+   it. Use
    `MAJOR.MINOR.PATCH`; a pre-release such as `0.2.0-beta.1` is allowed, and
    `[workspace.metadata.release] name` gives the release a name. The
    README's download table links straight to the files, so change the
@@ -64,9 +68,10 @@ Version order: `1.2.3-nightly.N` comes after `1.2.2` and before `1.2.3`, and
 `major·10⁷ + minor·10⁵ + patch·10³ + build`, where `build` is N for a nightly
 and 999 for a release; the Windows file and package versions end in the same
 number, and Linux packages use `1.2.3~nightly.N`, which apt and dnf sort
-before `1.2.3`. So a nightly install moves to the release when it's out, and
-a phone can't go from a nightly back to an older release without
-reinstalling.
+before `1.2.3`. The macOS bundle's `CFBundleVersion` is the same build
+number (999 for a release) after the numeric version. So a nightly install
+moves to the release when it's out, and a phone can't go from a nightly back
+to an older release without reinstalling.
 
 ## Signing
 
@@ -90,6 +95,22 @@ certificates for qualifying projects, signing in CI) or Azure Trusted
 Signing. Either plugs in after `package.ps1` builds the installer, before
 `SHA256SUMS.txt` is written.
 
+**macOS.** The disk image is ad hoc-signed when no Developer ID is
+configured, so Gatekeeper asks the first time and the app isn't notarized.
+With an Apple Developer account, set these repository secrets and the
+`macos` job imports the certificate, signs, notarizes and staples the bundle
+and disk image:
+
+| Secret | What it is |
+|---|---|
+| `MACOS_CERTIFICATE` | Base64 of the **Developer ID Application** `.p12` (with its private key) |
+| `MACOS_CERTIFICATE_PASSWORD` | The `.p12`'s password |
+| `MACOS_CODESIGN_IDENTITY` | The identity to sign with, such as `Developer ID Application: The NectarLink contributors (TEAMID)` |
+| `MACOS_NOTARY_APPLE_ID`, `MACOS_NOTARY_TEAM_ID`, `MACOS_NOTARY_APP_PASSWORD` | The Apple ID, team ID and an app-specific password for `notarytool` |
+
+Without them, everything still builds and the app runs after the user allows
+it once. A notarized build also needs the Apple Developer account ($99/yr).
+
 ## How the apps update
 
 - **Windows** (`desktop/app/src/updater.rs`): checks its channel's feed 30
@@ -111,6 +132,9 @@ Signing. Either plugs in after `package.ps1` builds the installer, before
   Nightly, and when the app opens; installs through `PackageInstaller`.
   Android 12 and later skip the confirmation once NectarLink installed the
   running version itself; the first update after a manual install asks once.
+- **macOS** (Preview): no self-updater yet. Download the next disk image and
+  replace the app in **Applications**; its settings, pairings and history
+  stay in `~/Library/Application Support/Nectarlink`.
 
 ## Testing an update before publishing
 

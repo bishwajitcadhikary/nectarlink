@@ -1,9 +1,9 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 # Builds everything a release ships, at a given version: the Windows
-# installers, the Linux packages and the signed Android app, each checked
-# before it's uploaded (installs, starts, signature). Called by the release
-# workflow (a tag) and the nightly one (a build from main), so both ship
-# builds made and checked the same way.
+# installers, the Linux packages, the macOS disk image and the signed Android
+# app, each checked before it's uploaded (installs, starts, signature). Called
+# by the release workflow (a tag) and the nightly one (a build from main), so
+# both ship builds made and checked the same way.
 name: Build
 
 on:
@@ -18,6 +18,20 @@ on:
         required: true
       ANDROID_KEYSTORE_PASSWORD:
         required: true
+      # Optional: sign and notarize the macOS disk image (see
+      # docs/technical/releasing.md). Without them it is ad hoc-signed.
+      MACOS_CERTIFICATE:
+        required: false
+      MACOS_CERTIFICATE_PASSWORD:
+        required: false
+      MACOS_CODESIGN_IDENTITY:
+        required: false
+      MACOS_NOTARY_APPLE_ID:
+        required: false
+      MACOS_NOTARY_TEAM_ID:
+        required: false
+      MACOS_NOTARY_APP_PASSWORD:
+        required: false
 
 permissions:
   contents: read
@@ -115,6 +129,73 @@ jobs:
         with:
           name: windows-arm64
           path: target/package/*-setup.exe
+
+  macos:
+    name: macOS disk image (universal)
+    runs-on: macos-15
+    env:
+      MACOS_CERTIFICATE: ${{ secrets.MACOS_CERTIFICATE }}
+    steps:
+      - uses: actions/checkout@v7
+      - name: Set the version
+        run: bash .github/scripts/set-version.sh "$VERSION"
+      - name: Install the pinned Rust toolchain and both Mac architectures
+        run: |
+          rustup show active-toolchain || rustup toolchain install
+          rustup target add aarch64-apple-darwin x86_64-apple-darwin
+      - uses: Swatinem/rust-cache@v2
+        with:
+          shared-key: release-macos-universal
+          save-if: ${{ github.ref == 'refs/heads/main' }}
+      # Qt's macOS build is universal: one install bundles both architectures.
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v4
+        with:
+          version: ${{ env.QT_VERSION }}
+          host: mac
+          target: desktop
+          arch: clang_64
+          # qttools is a base archive on macOS, not a module: it carries
+          # lrelease, which compiles the app's translations.
+          archives: qtbase qtdeclarative qtsvg qttools qttranslations
+          cache: true
+          aqtsource: git+https://github.com/miurahr/aqtinstall.git
+      - name: Import the Developer ID certificate
+        if: env.MACOS_CERTIFICATE != ''
+        env:
+          MACOS_CERTIFICATE_PASSWORD: ${{ secrets.MACOS_CERTIFICATE_PASSWORD }}
+        run: |
+          set -euo pipefail
+          keychain="$RUNNER_TEMP/signing.keychain-db"
+          password="$(uuidgen)"
+          echo "$MACOS_CERTIFICATE" | base64 -D > "$RUNNER_TEMP/certificate.p12"
+          security create-keychain -p "$password" "$keychain"
+          security set-keychain-settings -lut 21600 "$keychain"
+          security unlock-keychain -p "$password" "$keychain"
+          security import "$RUNNER_TEMP/certificate.p12" -k "$keychain" \
+            -P "$MACOS_CERTIFICATE_PASSWORD" -T /usr/bin/codesign
+          security set-key-partition-list -S apple-tool:,apple:,codesign: \
+            -s -k "$password" "$keychain"
+          # Keep the runner's own keychains too.
+          security list-keychains -d user -s "$keychain" \
+            $(security list-keychains -d user | sed 's/"//g')
+          echo "SIGNING_KEYCHAIN=$keychain" >> "$GITHUB_ENV"
+      - name: Build and check the disk image
+        env:
+          ARCH: universal
+          MACOSX_DEPLOYMENT_TARGET: "14.0"
+          NECTARLINK_CODESIGN_IDENTITY: ${{ secrets.MACOS_CODESIGN_IDENTITY }}
+          NECTARLINK_NOTARY_APPLE_ID: ${{ secrets.MACOS_NOTARY_APPLE_ID }}
+          NECTARLINK_NOTARY_TEAM_ID: ${{ secrets.MACOS_NOTARY_TEAM_ID }}
+          NECTARLINK_NOTARY_APP_PASSWORD: ${{ secrets.MACOS_NOTARY_APP_PASSWORD }}
+        run: bash desktop/packaging/macos/build-dmg.sh --check
+      - name: Remove the signing keychain
+        if: always() && env.SIGNING_KEYCHAIN != ''
+        run: security delete-keychain "$SIGNING_KEYCHAIN"
+      - uses: actions/upload-artifact@v7
+        with:
+          name: macos
+          path: dist/*.dmg
 
   linux:
     name: Linux packages (x86_64)

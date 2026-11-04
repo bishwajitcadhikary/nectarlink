@@ -123,6 +123,12 @@ jobs:
     secrets:
       ANDROID_KEYSTORE: ${{ secrets.ANDROID_KEYSTORE }}
       ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+      MACOS_CERTIFICATE: ${{ secrets.MACOS_CERTIFICATE }}
+      MACOS_CERTIFICATE_PASSWORD: ${{ secrets.MACOS_CERTIFICATE_PASSWORD }}
+      MACOS_CODESIGN_IDENTITY: ${{ secrets.MACOS_CODESIGN_IDENTITY }}
+      MACOS_NOTARY_APPLE_ID: ${{ secrets.MACOS_NOTARY_APPLE_ID }}
+      MACOS_NOTARY_TEAM_ID: ${{ secrets.MACOS_NOTARY_TEAM_ID }}
+      MACOS_NOTARY_APP_PASSWORD: ${{ secrets.MACOS_NOTARY_APP_PASSWORD }}
 
   publish:
     name: Publish the nightly
@@ -148,7 +154,7 @@ jobs:
         run: |
           set -euo pipefail
           cd files
-          sha256sum *.exe *.deb *.rpm *.AppImage *.tar.gz *.apk install.sh > SHA256SUMS.txt
+          sha256sum *.exe *.deb *.rpm *.AppImage *.tar.gz *.dmg *.apk install.sh > SHA256SUMS.txt
           cat SHA256SUMS.txt
           compare=""
           if [ -n "$PREVIOUS" ]; then
@@ -160,7 +166,7 @@ jobs:
             "A build for trying what's new before it's released, with the latest fixes and features and sometimes new bugs. NectarLink installs on the Nightly channel update to it by themselves; to get it, pick **Nightly** under Settings, Updates, in the PC app or on the phone." \
             "" \
             "$compare" > notes.md
-          gh release create "v$VERSION" *.exe *.deb *.rpm *.AppImage *.tar.gz *.apk install.sh SHA256SUMS.txt \
+          gh release create "v$VERSION" *.exe *.deb *.rpm *.AppImage *.tar.gz *.dmg *.apk install.sh SHA256SUMS.txt \
             --repo "$GITHUB_REPOSITORY" --target "$COMMIT" --prerelease \
             --title "Nightly $NUMBER · $NAME ($VERSION)" --notes-file notes.md
       - name: Point the nightly feed at it

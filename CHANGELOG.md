@@ -4,6 +4,15 @@ All notable changes to NectarLink. Versions follow
 [semantic versioning](https://semver.org); before 1.0, a minor version may
 change things that need a step from you, and its notes say so.
 
+## Unreleased
+
+### New
+
+- **NectarLink for macOS, as a disk image.** Releases now include
+  `Nectarlink-<version>-macos-universal.dmg`, a universal bundle of the
+  desktop app for Apple Silicon and Intel Macs. It is still a Preview: see
+  the platform support table for what works and what is in development.
+
 ## 0.1.5 (2026-11-03)
 
 The PC app on Linux and on Windows on ARM, Phone as microphone, Play on

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 //! `cargo xtask notices <out> [--target <triple>]`: the third-party notices
-//! shipped with the Windows app. Every crate compiled into the app (normal
+//! shipped with the desktop app. Every crate compiled into the app (normal
 //! dependencies for that target; not build or dev ones) with its license
 //! and the license files it ships, then Qt and the bundled fonts.
 
@@ -50,9 +50,19 @@ pub fn run(args: &[&str]) -> Result<()> {
     let metadata: Value = serde_json::from_slice(&output.stdout).context("parsing cargo metadata")?;
     let crates = shipped_crates(&metadata)?;
 
+    let platform = if target.contains("windows") {
+        "Windows"
+    } else if target.contains("apple-darwin") {
+        "macOS"
+    } else if target.contains("linux") {
+        "Linux"
+    } else {
+        "desktop"
+    };
+    let title = format!("NectarLink for {platform}: third-party notices");
     let mut text = String::new();
-    writeln!(text, "NectarLink for Windows: third-party notices")?;
-    writeln!(text, "{}", "=".repeat(43))?;
+    writeln!(text, "{title}")?;
+    writeln!(text, "{}", "=".repeat(title.len()))?;
     writeln!(
         text,
         "\nNectarLink is free software under the GNU General Public License, version 3\n\

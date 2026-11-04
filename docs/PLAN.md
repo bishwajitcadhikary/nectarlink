@@ -19,7 +19,7 @@
 | Mirroring | **Two engines:** *Elevated* (scrcpy-server, Apache-2.0) and *Standard* (MediaProjection). PC side decodes in hardware with Media Foundation and renders with D3D11 | Best quality and features when privileged access exists, and it still works when it doesn't |
 | Superpowers without root | **Power Levels** (Basic → Assist → Elevated). A Root level is parked for later. Elevated mode runs NectarLink's *own* code as the `shell` user, so there's **no extra app to install**. Several setup paths, and the UI greys out features by level | Unlocks background clipboard, sensitive notifications, consent-free mirroring, app windows and toggles on **any** Android phone |
 | Accounts / cloud | **None.** Local-first. Optional "away from home" mode via relays (self-hostable) | Privacy is the #1 reason people leave Phone Link |
-| Platforms | **Windows 11 only** (x64 + native ARM64). Android 8+. **macOS desktop = future scope** (Qt Quick, the Rust core and the `Platform`/`VideoSink` layers make it a port, not a rewrite). iPhone = later | Win11-only frees us to use Mica, the virtual camera API and the Win11 context menu |
+| Platforms | **Windows 11** (x64 + native ARM64), **Linux** (x86_64) and **macOS 14+ Preview** (universal disk image). Android 8+. iPhone = later | The shared Qt Quick UI and Rust core make the desktop a port, not three codebases |
 | Distribution | **GitHub-first**: GitHub Releases + winget (Windows), GitHub Releases + Obtainium + later IzzyOnDroid (Android). No Play account for now | Free, fast to ship, no Play policy limits on SMS/Accessibility/files |
 | License | (done) Apps **GPL-3.0-or-later** (+ app-store exception), core crates **MPL-2.0**, protocol spec & docs **CC BY 4.0**, name/logo trademark-protected, **DCO** for contributions | See §10.2 |
 | Crash reports | **Opt-in only**, with a preview of exactly what gets sent | Privacy is a selling point |
@@ -232,7 +232,7 @@ current Android.
 | Android Quick Settings tiles, home-screen widgets (Glance), share target, Direct Share to PC (done) | P0/P1 |
 | **CLI** (`nectarlink send file.pdf`, `nectarlink clip`, `nectarlink notify`, `nectarlink notify-when`) and local authenticated API for scripts and PowerToys Command Palette (done) | P1 |
 | Tablet as second screen (IddCx virtual monitor): deferred (requires an WHQL-signed UMDF/IddCx indirect display driver) | P2 |
-| macOS desktop build: deferred (future cross-platform scope) | P2 (future scope) |
+| macOS desktop Preview: app bundle and universal disk image in releases (done); screen mirroring, audio, webcam and Finder storage later | P1 |
 | Plugin/extension API over the open protocol: **out of scope for v1 / not started (local HTTP/WS API and CLI shipped instead)** | P2 |
 | Full i18n, accessibility (screen readers, keyboard nav, contrast), reduced motion (done) | P1 |
 
@@ -730,18 +730,21 @@ Each phase ends with a usable, releasable product. Phase sizes are relative; act
 | Android developer verification | Likely a small one-time fee (unconfirmed) | Needed before global enforcement (2027) for GitHub APKs to install normally |
 | Relays for Away mode | $0 in alpha (public iroh relays) → ~$10 to 20 / mo for 2 small VPS regions | ~95 % of traffic goes direct, so relay bandwidth stays small. Self-hosting is documented |
 | Test devices | $0 | Covered by the maintainer's tester community |
-| Later: Apple Developer (Mac notarization) | $99 / yr | Only when the Mac build ships |
+| Later: Apple Developer (Mac notarization) | $99 / yr | When signing and notarizing the macOS disk image ships |
 | **Total, year 1** | **Bare minimum ≈ $10 to 50 · Comfortable ≈ $250 to 450** | Funded via GitHub Sponsors / Open Collective once public |
 
 ### 10.7 Future scope (recorded)
-- **macOS desktop:** the maintainer has a MacBook. A port, not a rewrite: the Rust core, the cxx-qt bridge and ~90 % of the QML screens are shared (Qt Quick renders with Metal on Mac). Mac-specific work sits behind `Platform`/`VideoSink`:
+- **macOS desktop:** the Preview now ships as a universal `.dmg` from CI. It is
+  a port, not a rewrite: the Rust core, the cxx-qt bridge and ~90 % of the QML
+  screens are shared (Qt Quick renders with Metal on Mac). Mac-specific work
+  sits behind `Platform`/`VideoSink`; the rest is in progress:
 
   | Feature | Windows | Mac |
   |---|---|---|
-  | Mirrored video in the UI | Media Foundation + D3D11 | VideoToolbox + Metal (small Mac-only C++/Obj-C++ piece) |
-  | Notifications | Windows toasts | UserNotifications (needs a signed app) |
+  | Mirrored video in the UI | Media Foundation + D3D11 | VideoToolbox decode done; window and input next |
+  | Notifications | Windows toasts | UserNotifications (system banners, done) |
   | Window glass | Mica | macOS vibrancy |
-  | Tray | System tray | Menu-bar icon |
+  | Tray | System tray | Menu-bar icon (done) |
   | Nectar Island | Top-of-screen pill | Around the MacBook notch |
   | Phone storage in file manager | Explorer (Cloud Files) | Finder (File Provider extension) |
   | "Send to phone" right-click | Explorer context menu | Finder Share / Sync extension |
@@ -749,7 +752,9 @@ Each phase ends with a usable, releasable product. Phase sizes are relative; act
   | Unlock computer with phone | Credential provider | **Not portable** (no public equivalent) |
   | Call audio over Bluetooth | HFP (if spike passes) | **Unclear / likely not** (deprecated APIs); calls = alerts + controls |
 
-  Needs the Apple Developer account ($99/yr) for signing and notarization, and universal builds (Apple Silicon + Intel) on GitHub's macOS runners.
+  Signing, notarization and the Apple Developer account ($99/yr) are wired
+  into CI but off until the secrets are set; universal builds run on GitHub's
+  macOS runners.
 - **iPhone:** later. Expect KDE Connect-style iOS limits (no notification mirroring, no SMS access).
 
 ---

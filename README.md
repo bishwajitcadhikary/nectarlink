@@ -7,7 +7,8 @@
 **Your Android phone and your PC, working as one.**
 
 Notifications, messages, calls, clipboard, files, photos, screen mirroring and
-phone apps in windows, between Android and Windows 10 (2004+) or 11. Free and open source.
+phone apps in windows, between Android and Windows 10 (2004+) or 11, Linux, or
+macOS (Preview). Free and open source.
 Local-first, end-to-end encrypted, no account and no cloud.
 
 Hi, I'm Bee, and yes, a bee built an app called NectarLink. I build cool stuff
@@ -40,6 +41,7 @@ of new features I wanted that I think you'll enjoy having too.
 |---|---|---|
 | **Windows (x64)** | [Installer (.exe)](https://github.com/thtbee/nectarlink/releases/download/v0.1.4/Nectarlink-0.1.4-x64-setup.exe) | Windows 10 (2004+) or 11, 64-bit Intel or AMD (Phone as webcam needs Windows 11) |
 | **Windows (ARM64)** | From the next release | Windows 11 on ARM (Snapdragon) |
+| **macOS (Universal)** | From the next release: `Nectarlink-<version>-macos-universal.dmg` | macOS 14 or newer, Apple Silicon or Intel |
 | **Linux (x86_64)** | From the next release: [one command](#on-linux), or a .deb, .rpm, AppImage or .tar.gz | Ubuntu 24.04 or newer, Debian 13, Fedora 40 or newer, 64-bit Intel or AMD |
 | **Android** | [App (.apk)](https://github.com/thtbee/nectarlink/releases/download/v0.1.4/Nectarlink-0.1.4-android.apk) | Android 8.0 or newer |
 
@@ -66,8 +68,12 @@ for the details.
 
 > [!NOTE]
 > SmartScreen may warn about the Windows installer the first time, because it
-> isn't code-signed yet: choose **More info**, then **Run anyway**. On Android,
-> allow your browser or file manager to install apps when asked.
+> isn't code-signed yet: choose **More info**, then **Run anyway**. On macOS,
+> the Preview isn't notarized yet either: open the disk image, drag
+> **NectarLink** to **Applications**, then Control-click the app and choose
+> **Open** the first time (or allow it in **System Settings › Privacy &
+> Security**). On Android, allow your browser or file manager to install apps
+> when asked.
 
 > [!IMPORTANT]
 > In India and many other countries, Google Play Protect blocks the APK with
@@ -217,7 +223,7 @@ Windows backdrop; and **Graphite**, ink on paper. All in light and dark.
 ## How it works
 
 ```
- Android app (Kotlin, Compose)            Windows app (Qt Quick, Rust)
+ Android app (Kotlin, Compose)            Desktop app (Qt Quick, Rust)
           │ UniFFI                                │ cxx-qt
           ▼                                       ▼
  ┌─────────────────────┐   QUIC (iroh),   ┌─────────────────────┐
@@ -229,8 +235,8 @@ Windows backdrop; and **Graphite**, ink on paper. All in light and dark.
 
 - **One core, two apps.** Protocol, pairing, sessions, the trust store and the
   capability matrix live in Rust (`core/`) and run unchanged on both platforms.
-- **Native on both sides.** A Windows 11 app built with Qt Quick and Rust, and
-  an Android app built with Jetpack Compose.
+- **Native on both sides.** A desktop app built with Qt Quick and Rust, on
+  Windows, Linux and macOS, and an Android app built with Jetpack Compose.
 - **Capability matrix.** Both apps work out which features a pair of devices
   supports and what would enable the rest, so the interface never offers
   something that can't work.
@@ -247,7 +253,8 @@ core/
   nectarlink-adb/        Wireless debugging client for the phone's helper  (MPL-2.0)
   nectarlink-cli/        Command-line client (`nectarlink`)                (GPL)
 desktop/
-  app/                   Windows app: Rust host, cxx-qt bridge, QML UI     (GPL)
+  app/                   Desktop app (Windows, Linux, macOS): Rust host, cxx-qt bridge, QML UI (GPL)
+  packaging/macos/       macOS .app and disk image build script              (GPL)
   vcam/                  Windows 11 virtual camera Media Foundation DLL    (GPL)
   installer/             NSIS installer script and Sparse Package manifest (GPL)
 android/                 Android app: Kotlin and Jetpack Compose (API 26+) (GPL)
@@ -281,8 +288,12 @@ encoding requires hardware; if unavailable, screen sharing falls back to H.264.
 ```sh
 cargo test -p nectarlink-protocol -p nectarlink-core -p nectarlink-ffi   # core and tests
 cargo run -p nectarlink-cli -- --help                                     # command-line client
-cargo run -p nectarlink-desktop                                           # Windows app (Qt's bin on PATH)
+cargo run -p nectarlink-desktop                                           # desktop app (Qt's bin on PATH)
 cd android && ./gradlew assembleDebug                                     # Android app
+```
+
+```sh
+./desktop/packaging/macos/build-dmg.sh    # macOS app and disk image: dist/Nectarlink-<version>-macos-<arch>.dmg
 ```
 
 ```powershell
@@ -295,7 +306,7 @@ Releases are built by CI from a `v*` tag; see
 
 ## Documentation
 
-- [User guide](docs/guide/README.md): setup, pairing and every feature, on Windows and Android
+- [User guide](docs/guide/README.md): setup, pairing and every feature, on Windows, Linux, macOS and Android
 - [Technical documentation](docs/technical/README.md): architecture, security model, protocol, storage, performance and builds
 - [Protocol v0](docs/protocol/v0.md) and the [capability registry](docs/protocol/capabilities.md)
 - [Architecture decision records](docs/adr) and the [design system](docs/design/README.md)
@@ -322,7 +333,7 @@ open a public issue.
 
 ## License
 
-- Windows and Android apps, CLI: [GPL-3.0-or-later](LICENSES/GPL-3.0-or-later.txt),
+- Desktop and Android apps, CLI: [GPL-3.0-or-later](LICENSES/GPL-3.0-or-later.txt),
   with an [app-store exception](LICENSES/APP-STORE-EXCEPTION.md)
 - Core libraries: [MPL-2.0](LICENSES/MPL-2.0.txt)
 - Protocol specification and documentation: [CC BY 4.0](LICENSES/CC-BY-4.0.txt)

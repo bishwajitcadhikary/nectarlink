@@ -226,6 +226,9 @@ jobs:
           host: mac
           target: desktop
           arch: clang_64
+          # qttools is a base archive on macOS, not a module: it carries
+          # lrelease, which compiles the app's translations.
+          archives: qtbase qtdeclarative qtsvg qttools qttranslations
           cache: true
           aqtsource: git+https://github.com/miurahr/aqtinstall.git
       - name: Clippy
@@ -250,10 +253,15 @@ jobs:
           host: mac
           target: desktop
           arch: clang_64
+          # qttools is a base archive on macOS, not a module: it carries
+          # lrelease, which compiles the app's translations.
+          archives: qtbase qtdeclarative qtsvg qttools qttranslations
           cache: true
           aqtsource: git+https://github.com/miurahr/aqtinstall.git
-      - name: Release build
-        run: cargo build --locked --release -p nectarlink-desktop
+      - name: Build and check the bundle and disk image
+        env:
+          MACOSX_DEPLOYMENT_TARGET: "14.0"
+        run: bash desktop/packaging/macos/build-dmg.sh --check
 
   desktop-linux:
     name: Linux app (x64)

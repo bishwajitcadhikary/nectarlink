@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!-- Build template: build-dmg.sh fills in the version keys. -->
+<plist version="1.0">
+<dict>
+    <key>CFBundleDevelopmentRegion</key>
+    <string>en</string>
+    <key>CFBundleDisplayName</key>
+    <string>NectarLink</string>
+    <key>CFBundleExecutable</key>
+    <string>nectarlink-desktop</string>
+    <key>CFBundleIconFile</key>
+    <string>AppIcon</string>
+    <key>CFBundleIdentifier</key>
+    <string>org.nectarlink.desktop</string>
+    <key>CFBundleInfoDictionaryVersion</key>
+    <string>6.0</string>
+    <key>CFBundleName</key>
+    <string>NectarLink</string>
+    <key>CFBundlePackageType</key>
+    <string>APPL</string>
+    <key>CFBundleShortVersionString</key>
+    <string>@SHORT_VERSION@</string>
+    <key>CFBundleVersion</key>
+    <string>@BUNDLE_VERSION@</string>
+    <key>LSApplicationCategoryType</key>
+    <string>public.app-category.utilities</string>
+    <key>LSMinimumSystemVersion</key>
+    <string>@MINIMUM_MACOS@</string>
+    <key>NSHighResolutionCapable</key>
+    <true/>
+    <key>NSHumanReadableCopyright</key>
+    <string>GPL-3.0-or-later. The NectarLink contributors.</string>
+    <key>NSPrincipalClass</key>
+    <string>NSApplication</string>
+    <key>NSSupportsAutomaticGraphicsSwitching</key>
+    <true/>
+    <key>NSLocalNetworkUsageDescription</key>
+    <string>NectarLink connects to your phone directly over your local network. Nothing is sent to a server.</string>
+    <key>NSCameraUsageDescription</key>
+    <string>NectarLink uses the camera for Continuity Camera photos and, later, your phone as a webcam.</string>
+    <key>NSMicrophoneUsageDescription</key>
+    <string>NectarLink uses the microphone for voice typing, call audio and voice recordings.</string>
+    <key>NSBluetoothAlwaysUsageDescription</key>
+    <string>NectarLink uses Bluetooth to find nearby devices and, where available, route call audio.</string>
+</dict>
+</plist>

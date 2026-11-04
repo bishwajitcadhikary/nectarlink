@@ -1,6 +1,6 @@
 # Getting Started
 
-This guide walks you through installing NectarLink on Windows, Linux and Android, completing the first-run setup walkthrough, pairing your devices, and choosing the Android power level that fits how you work.
+This guide walks you through installing NectarLink on Windows, Linux, macOS and Android, completing the first-run setup walkthrough, pairing your devices, and choosing the Android power level that fits how you work.
 
 ## System Requirements
 
@@ -8,6 +8,7 @@ This guide walks you through installing NectarLink on Windows, Linux and Android
 | :--- | :--- | :--- |
 | **Windows PC** | Windows 10 (version 2004 or newer) or Windows 11, 64-bit | The phone as webcam (`MFCreateVirtualCamera`) and the Mica backdrop need Windows 11 (build 22000 or newer). The phone's storage in File Explorer has only been tested on Windows 11. |
 | **Linux PC** | Ubuntu 24.04 or newer, Debian 13, Fedora 40 or newer, or another distribution from 2024 on (glibc 2.39 or newer), 64-bit Intel or AMD | X11 or Wayland. The phone as a webcam needs the `v4l2loopback` driver, which the install command sets up. |
+| **macOS PC (Preview)** | macOS 14 (Sonoma) or newer, Apple Silicon or Intel | Pairing, files and folders, photos, clipboard, notifications, calls and messages, camera handoff and phone toggles work. Screen mirroring, screen recording, PC audio streaming, the phone as a webcam and phone storage in Finder are still in development. |
 | **Android Phone or Tablet** | Android 8.0 (API 26) or newer | Android 10+ required for internal audio capture during mirroring; Android 11+ required for on-device Wireless Debugging (`Elevated`) and `app window` streaming; Android 12+ required for `Elevated` in-call mute/hold/speaker controls. |
 | **Network** | Shared Wi-Fi / LAN, USB cable, or **Connect over mobile data** | By default, all device-to-device traffic travels directly over your local network or a USB data cable without leaving your LAN (installed copies only contact GitHub Releases over HTTPS to check for app updates; see [Privacy and Security](privacy-and-security.md)). |
 
@@ -41,7 +42,16 @@ To install only the app, end the command with `sh -s -- --no-extras` instead of 
 
 You can also download a package from the GitHub Releases page yourself: `nectarlink_<version>_amd64.deb`, `nectarlink-<version>-1.x86_64.rpm`, `Nectarlink-<version>-x86_64.AppImage`, or `Nectarlink-<version>-linux-x86_64.tar.gz` (run its `install.sh`). The AppImage adds itself to your app menu the first time it runs. **Connection Doctor** in NectarLink's **Settings › Connection & About** finds anything still missing for the webcam, input or firewall and says how to fix it.
 
-Each kind of install updates itself the same way it was installed.
+Each kind of Linux install updates itself the same way it was installed.
+
+### On macOS
+
+1. Download `Nectarlink-<version>-macos-universal.dmg` from the GitHub Releases page. One disk image runs on both Apple Silicon and Intel Macs.
+2. Open the disk image and drag **NectarLink** to **Applications**.
+3. The Preview isn't code-signed or notarized with an Apple Developer account yet, so macOS asks the first time. Control-click **NectarLink** in Applications, choose **Open**, then **Open** again. If macOS still refuses, open **System Settings › Privacy & Security** and choose **Open Anyway**.
+4. Allow the local network prompt when NectarLink asks, so it can find and reach your phone.
+
+The macOS Preview updates by hand for now: download the next disk image and drag the app over the old one. Your settings and pairings stay in `~/Library/Application Support/Nectarlink`.
 
 ### On Android
 
@@ -55,6 +65,7 @@ Each kind of install updates itself the same way it was installed.
 
 - **Windows:** open **Settings › Apps › Installed apps**, choose **NectarLink**, then **Uninstall**. This removes the app, its firewall rule, update task, shortcuts and Share sheet entry, and deletes its settings and pairings on this PC. Files you received and voice recordings stay where they were saved.
 - **Linux:** run `curl -fsSL https://github.com/thtbee/nectarlink/releases/latest/download/install.sh | sh -s -- --uninstall`. This removes the app however it was installed, its webcam, input and firewall settings, its menu entry and starting with your computer. Your settings and pairings stay in `~/.local/share/Nectarlink`; delete that folder to remove them too. An AppImage is removed by deleting the file.
+- **macOS:** quit NectarLink, drag it from **Applications** to the Bin, then delete `~/Library/Application Support/Nectarlink` if you want to remove its settings and pairings too.
 - **Android:** uninstall it like any other app.
 
 ## First-Run Setup Walkthrough

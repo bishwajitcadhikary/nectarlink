@@ -1,6 +1,6 @@
 # Building and Testing
 
-This document covers the pinned toolchain versions, environment variables, build commands, and test suites required to build and verify NectarLink on Windows and Android.
+This document covers the pinned toolchain versions, environment variables, build commands, and test suites required to build and verify NectarLink on Windows, Linux, macOS and Android.
 
 ## Pinned Toolchains
 
@@ -10,6 +10,7 @@ This document covers the pinned toolchain versions, environment variables, build
 | **Rust Targets** | `x86_64-pc-windows-msvc`, `aarch64-pc-windows-msvc`, `aarch64-linux-android`, `x86_64-linux-android` | Installed via `rustup target add` |
 | **MSVC Build Tools** | Visual Studio 2022 Build Tools (C++, `x64` and `ARM64/ARM64EC`) | Windows 11 SDK |
 | **Qt 6** | `Qt 6.12` (`msvc2022_64` and `msvc2022_arm64`, QtQuick, QtQuickControls2, QtShaderTools, QtMultimedia) | `C:\Qt\6.12.0\msvc2022_64` / `msvc2022_arm64` |
+| **macOS build** | macOS 14+, Xcode Command Line Tools, Qt 6.12 (`macos` or `clang_64`, with its `qttools` archive for `lrelease`; universal for a universal disk image), `aarch64-apple-darwin` and `x86_64-apple-darwin` Rust targets | `desktop/packaging/macos/build-dmg.sh` |
 | **JDK** | JDK `17` or newer (`21` supported) | `JAVA_HOME` |
 | **Android SDK** | Platform `37` (`compileSdk = 37`, `targetSdk = 37`, `minSdk = 26` / Android 8.0) | `%LOCALAPPDATA%\Android\Sdk` |
 | **Android NDK** | `30.0.16248370` (or side-by-side NDK configured in `android/app/build.gradle.kts`) | `%LOCALAPPDATA%\Android\Sdk\ndk` |
@@ -32,6 +33,8 @@ $env:ANDROID_HOME = "$env:LOCALAPPDATA\Android\Sdk"
 ```
 
 Note: [`scripts/check.ps1`](../../scripts/check.ps1) and [`scripts/package.ps1`](../../scripts/package.ps1) automatically locate the installed Qt and Android SDK paths on Windows if the environment variables are not already set.
+
+On macOS, set `QMAKE` (or `QT_ROOT_DIR`) to the Qt 6.12 install if it isn't on `PATH` or in Homebrew, `~/Qt`, or the Qt online installer's usual folder. `desktop/packaging/macos/build-dmg.sh` finds those by itself.
 
 ## Building Individual Components
 
@@ -135,6 +138,28 @@ powershell -ExecutionPolicy Bypass -File scripts\package.ps1 -StageOnly
 Artifacts are written to `target/package/`:
 - `target/package/Nectarlink/` (staged portable directory)
 - `target/package/Nectarlink-<version>-x64-setup.exe` or `Nectarlink-<version>-arm64-setup.exe` (NSIS installer when `makensis.exe` is installed)
+
+### 7. macOS Application and Disk Image
+
+[`desktop/packaging/macos/build-dmg.sh`](../../desktop/packaging/macos/build-dmg.sh) builds the app, stages `NectarLink.app` with `macdeployqt`, compiles the translations, signs it (ad hoc unless a Developer ID is configured) and writes a disk image:
+
+```sh
+# Native architecture, ad hoc-signed:
+./desktop/packaging/macos/build-dmg.sh
+
+# Universal (Apple Silicon + Intel) and verify the mounted disk image:
+ARCH=universal ./desktop/packaging/macos/build-dmg.sh --check
+
+# Use an existing release build:
+SKIP_BUILD=1 ./desktop/packaging/macos/build-dmg.sh
+
+# Sign and notarize with a Developer ID (see releasing.md):
+NECTARLINK_CODESIGN_IDENTITY="Developer ID Application: … (TEAMID)" \
+NECTARLINK_NOTARY_PROFILE="nectarlink" \
+  ./desktop/packaging/macos/build-dmg.sh
+```
+
+A universal build needs the `aarch64-apple-darwin` and `x86_64-apple-darwin` Rust targets and Qt's universal macOS build (aqtinstall, Homebrew or the Qt online installer), including the `qttools` archive for `lrelease`. The disk image is written to `dist/Nectarlink-<version>-macos-<arch>.dmg`.
 
 ## Running the Test Suites
 

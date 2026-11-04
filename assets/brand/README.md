@@ -10,10 +10,12 @@ other where to find nectar.
 | `icon-flat.svg` | The same without the glow and highlights, for flat contexts |
 | `icon-mono.svg` | The mark alone in white, for one-color uses (notifications, themed icons) |
 | `icon-512.png` | `icon.svg` at 512 × 512 |
+| `icon-1024.png` | `icon.svg` at 1024 × 1024, for the macOS app icon |
 
 The apps draw the mark themselves from the same geometry:
 `desktop/app/src/mark.rs` (the Windows icon, tray and notifications at every
-size) and `android/app/src/main/res/drawable/ic_launcher_*.xml` and
+size), `desktop/packaging/macos/build-dmg.sh` (the macOS `.icns` from
+`icon-1024.png`) and `android/app/src/main/res/drawable/ic_launcher_*.xml` and
 `ic_notification.xml`.
 
 Colors (Honey palette, `docs/design/tokens.json`): tile `#2C1600`, glow
